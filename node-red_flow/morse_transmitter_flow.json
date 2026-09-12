@@ -1,0 +1,219 @@
+[
+    {
+        "id": "2ba1f47195931082",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "167308b5a42de5fe",
+        "type": "inject",
+        "z": "2ba1f47195931082",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 100,
+        "y": 20,
+        "wires": [
+            [
+                "f34fadcf8eefc25c"
+            ]
+        ]
+    },
+    {
+        "id": "729fedd28f7612ba",
+        "type": "http request",
+        "z": "2ba1f47195931082",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 310,
+        "y": 140,
+        "wires": [
+            [
+                "d120518465c3c9c1"
+            ]
+        ]
+    },
+    {
+        "id": "d120518465c3c9c1",
+        "type": "function",
+        "z": "2ba1f47195931082",
+        "name": "function 1",
+        "func": "const telegramResponse = msg.payload;\nconst updates = telegramResponse.result;\n\nif (!updates || updates.length === 0) {\n    return null;\n}\n\nlet nextOffset = flow.get(\"telegram_offset\");\n\nfor (const update of updates) {\n\n    // Telegram update ID\n    const updateId = update.update_id;\n\n    // Update the offset for the next Telegram request\n    if (nextOffset === undefined || updateId >= nextOffset) {\n        nextOffset = updateId + 1;\n    }\n\n    // Ignore updates that are not text messages\n    if (!update.message || !update.message.text) {\n        continue;\n    }\n\n    const telegramMessage = update.message;\n\n    // Send one clean message for each Telegram update\n    node.send({\n        payload: {\n            update_id: updateId,\n            message_id: telegramMessage.message_id,\n            sender_id: telegramMessage.from.id,\n            message: telegramMessage.text\n        }\n    });\n}\n\n// Save the offset for the next request\nflow.set(\"telegram_offset\", nextOffset);\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 220,
+        "wires": [
+            [
+                "b897023897782d6d",
+                "8be869e4b4120f75"
+            ]
+        ]
+    },
+    {
+        "id": "a342800a4bce0807",
+        "type": "mqtt out",
+        "z": "2ba1f47195931082",
+        "name": "",
+        "topic": "morse",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "b92f0e014001afc2",
+        "x": 630,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "b897023897782d6d",
+        "type": "json",
+        "z": "2ba1f47195931082",
+        "name": "",
+        "property": "payload",
+        "action": "str",
+        "pretty": false,
+        "x": 510,
+        "y": 280,
+        "wires": [
+            [
+                "a342800a4bce0807",
+                "cbd3ef98968c8018"
+            ]
+        ]
+    },
+    {
+        "id": "f34fadcf8eefc25c",
+        "type": "function",
+        "z": "2ba1f47195931082",
+        "name": "function 2",
+        "func": "const nextOffset = flow.get(\"telegram_offset\");\n\nlet telegramUrl = \"https://api.telegram.org/botTOKEN/getUpdates\";\n\nif (nextOffset !== undefined) {\n    telegramUrl += \"?offset=\" + nextOffset;\n}\n\nmsg.url = telegramUrl;\n \nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 200,
+        "y": 80,
+        "wires": [
+            [
+                "729fedd28f7612ba",
+                "40f0e4113ca04825"
+            ]
+        ]
+    },
+    {
+        "id": "40f0e4113ca04825",
+        "type": "debug",
+        "z": "2ba1f47195931082",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 360,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "8be869e4b4120f75",
+        "type": "debug",
+        "z": "2ba1f47195931082",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "cbd3ef98968c8018",
+        "type": "debug",
+        "z": "2ba1f47195931082",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "b92f0e014001afc2",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "USER_IP_ADDRESS",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
